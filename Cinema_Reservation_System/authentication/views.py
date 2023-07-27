@@ -28,52 +28,65 @@ def sign_in_view(request):
 
     return render(request, 'signin.html', {'form': form})
 
-@login_required
+
 def sign_up_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
+            # Save the user object after setting the password
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
 
             # Generate a verification token
             verification_token = str(uuid.uuid4())
             user.email_verification_token = verification_token
-            
+
             user.save()
 
             # Send the verification email
             subject = 'Email Verification'
             message = f'Click the link below to verify your email:\n\n' \
-                      f'http://example.com/verify_email/{verification_token}/'
-            from_email = 'noreply@gmail.com'
+                      f'http://127.0.0.1:8000/verify_email/{verification_token}/'
+            from_email = 'ycn585@gmail.com'  # Change this to your sending email address
             to_email = user.email
             send_mail(subject, message, from_email, [to_email])
 
-            return redirect('email_verification_pending')
+            return redirect('verification_code_entry')  # Redirect to the verification code entry page
+
     else:
         form = SignUpForm()
 
     return render(request, 'signup.html', {'form': form})
 
-
 def email_verification_pending(request):
     return render(request, 'email_verification_pending.html')
 
-
-
-def verify_email(request, verifiction_token):
+def verify_email(request, verification_token):
     try:
-        user = UserProfile.objects.get(email_verified=False)
-        if user.email_verification_token == verifiction_token:
-            user.email_verified = True
-            user.save()
+        user = UserProfile.objects.get(email_verification_token=verification_token)
+        if user.email_verified:
             return render(request, 'email_verified.html')
         else:
-            return render(request, 'email_verification_invalid.html')
-    
+            return redirect('verification_code_entry')
     except UserProfile.DoesNotExist:
         return render(request, 'email_verification_invalid.html')
+
+def email_verification_view(request):
+    if request.method == 'POST':
+        verification_code = request.POST.get('verification_code')
+        try:
+            user = UserProfile.objects.get(email_verification_token=verification_code)
+            user.email_verified = True
+            user.email_verification_token = None
+            user.save()
+            return render(request, 'email_verified.html')
+        except UserProfile.DoesNotExist:
+            return render(request, 'email_verification_invalid.html')
+
+    return render(request, 'email_verification_entry.html')
+
+
+
 
 
 

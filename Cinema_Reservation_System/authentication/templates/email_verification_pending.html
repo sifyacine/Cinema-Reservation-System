@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email Verification Pending</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            text-align: center;
+            background-color: #f7f7f7;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 30px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #007bff;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Email Verification Pending</h1>
+        <p>Thank you for signing up! An email has been sent to your provided email address.</p>
+        <p>Please check your inbox (including the spam folder) for the verification email.</p>
+        <p>If you haven't received the email, you can request a new verification email by clicking the link below:</p>
+        <a href="{% url 'verification_code_entry' %}">Resend Verification Email</a>
+    </div>
+</body>
+</html>
