@@ -20,7 +20,6 @@ class SignInView(APIView):
         if serializer.is_valid():
             email_or_phone = serializer.validated_data['email_or_phone']
             password = serializer.validated_data['password']
-
             try:
                 user_profile = UserProfile.objects.get(email=email_or_phone) 
                 if user_profile.password == password:
