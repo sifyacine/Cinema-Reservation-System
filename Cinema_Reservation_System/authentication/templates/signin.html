@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sign Up</title>
+    <title>Sign In</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
@@ -10,22 +10,16 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <h3>Sign Up</h3>
+                        <h3>Sign In</h3>
                     </div>
                     <div class="card-body">
                         <form method="post">
                             {% csrf_token %}
-                            {{ form.first_name.label_tag }}
-                            {{ form.first_name }}
-                            {{ form.last_name.label_tag }}
-                            {{ form.last_name }}
-                            {{ form.email.label_tag }}
-                            {{ form.email }}
-                            {{ form.phone_number.label_tag }}
-                            {{ form.phone_number }}
+                            {{ form.email_or_phone.label_tag }}
+                            {{ form.email_or_phone }}
                             {{ form.password.label_tag }}
                             {{ form.password }}
-                            <button type="submit" class="btn btn-primary mt-3">Sign Up</button>
+                            <button type="submit" class="btn btn-primary mt-3">Sign In</button>
                         </form>
                     </div>
                 </div>
