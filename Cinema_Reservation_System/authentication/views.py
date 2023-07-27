@@ -1,3 +1,5 @@
+# authentication/views.py
+
 from django.shortcuts import render, redirect
 from .forms import SignUpForm, SignInForm
 from django.contrib.auth import authenticate, login
@@ -8,48 +10,31 @@ def sign_in_view(request):
         if form.is_valid():
             email_or_phone = form.cleaned_data['email_or_phone']
             password = form.cleaned_data['password']
-
-            # Check if the user exists in the database and verify the credentials
             user = authenticate(request, username=email_or_phone, password=password)
 
             if user is not None:
-                # User exists and credentials are valid, log in the user
                 login(request, user)
-                return redirect('dashboard')  # Replace 'dashboard' with your desired redirect URL
+                return redirect('signup') 
             else:
-                # User doesn't exist or credentials are invalid, show an error message
                 form.add_error(None, 'Invalid email/phone or password.')
 
     else:
         form = SignInForm()
 
-    return render(request, 'signin.html', {'form': form})
+    return render(request, 'templates/signin.html', {'form': form})
 
 
 def sign_up_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            user_profile = form.save()
+            user = form.save()
 
-            return redirect('success')
+            return redirect('signin')
     else:
         form = SignUpForm()
 
-    return render(request, 'signup.html', {'form': form})
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return render(request, 'templates/signup.html', {'form': form})
 
 
 
@@ -78,17 +63,15 @@ def sign_up_view(request):
 # class UserProfileCreateView(CreateAPIView):
 #     queryset = UserProfile.objects.all()
 #     serializer_class = UserProfileSerializer
-
-
+    
 # # signin views
-
-
 # class SignInView(APIView):
 #     def post(self, request):
 #         serializer = SignInSerializer(data=request.data)
 #         if serializer.is_valid():
 #             email_or_phone = serializer.validated_data['email_or_phone']
 #             password = serializer.validated_data['password']
+
 #             try:
 #                 user_profile = UserProfile.objects.get(email=email_or_phone) 
 #                 if user_profile.password == password:
