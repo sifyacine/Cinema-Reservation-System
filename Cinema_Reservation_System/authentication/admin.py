@@ -1,23 +1,14 @@
+# authentication/admin.py
+
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 from .models import UserProfile
 
-class UserProfileAdmin(UserAdmin):
-    list_display = ('email', 'first_name', 'last_name', 'phone_number')
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
-    search_fields = ('email', 'first_name', 'last_name', 'phone_number')
-    ordering = ('email',)
-    fieldsets = (
-        (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'phone_number')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
-    )
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2'),
-        }),
-    )
+class UserProfileAdmin(admin.ModelAdmin):
+    
+    list_display = ['first_name', 'last_name', 'email', 'phone_number']
 
+    search_fields = ['first_name', 'last_name', 'email', 'phone_number']
+
+
+# Register the UserProfile model with the custom admin class
 admin.site.register(UserProfile, UserProfileAdmin)
