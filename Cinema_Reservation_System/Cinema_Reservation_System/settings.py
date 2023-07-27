@@ -75,8 +75,13 @@ WSGI_APPLICATION = 'Cinema_Reservation_System.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'djongo',
+        'NAME': 'djongo',
+        "CLIENT": {
+            'host': 'mongodb+srv://admin:admin@mycluster.dtselnt.mongodb.net/',
+            'username': 'admin',
+            'password': 'admin',
+        }
     }
 }
 
