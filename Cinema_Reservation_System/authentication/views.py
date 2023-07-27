@@ -4,20 +4,15 @@ from .serializers import UserProfileSerializer, SignInSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from django.contrib.auth.hashers import check_password
 
+# signup views 
 class UserProfileCreateView(CreateAPIView):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
 
-# authentication/views.py
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+# signin views
 
-from .serializers import SignInSerializer
-from .models import UserProfile
 
 class SignInView(APIView):
     def post(self, request):
@@ -27,8 +22,7 @@ class SignInView(APIView):
             password = serializer.validated_data['password']
 
             try:
-                # Retrieve the user based on the provided email or phone number
-                user_profile = UserProfile.objects.get(email=email_or_phone)  # Try email first
+                user_profile = UserProfile.objects.get(email=email_or_phone) 
                 if user_profile.password == password:
                     return Response({"message": "Access accepted."})
                 else:
@@ -36,7 +30,6 @@ class SignInView(APIView):
 
             except UserProfile.DoesNotExist:
                 try:
-                    # If email didn't match, try phone number
                     user_profile = UserProfile.objects.get(phone_number=email_or_phone)
                     if user_profile.password == password:
                         return Response({"message": "Access accepted."})
@@ -44,9 +37,8 @@ class SignInView(APIView):
                         return Response({"message": "Wrong password."})
                 
                 except UserProfile.DoesNotExist:
-                    # User not found, return error response
                     return Response({"message": "Wrong email or phone number."}, status=status.HTTP_401_UNAUTHORIZED)
 
         else:
-            # Invalid input data, return error response
+
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
