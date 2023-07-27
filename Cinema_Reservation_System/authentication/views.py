@@ -29,7 +29,7 @@ def sign_up_view(request):
         if form.is_valid():
             user_profile = form.save()
 
-            return redirect('success')
+            return redirect('signin')
     else:
         form = SignUpForm()
 
