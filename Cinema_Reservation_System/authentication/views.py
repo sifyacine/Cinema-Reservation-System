@@ -1,3 +1,5 @@
+# authentication/views.py
+
 from django.shortcuts import render, redirect
 from .forms import SignUpForm, SignInForm
 from django.contrib.auth import authenticate, login
@@ -14,39 +16,25 @@ def sign_in_view(request):
                 login(request, user)
                 return redirect('signup') 
             else:
-
                 form.add_error(None, 'Invalid email/phone or password.')
 
     else:
         form = SignInForm()
 
-    return render(request, 'signin.html', {'form': form})
+    return render(request, 'templates/signin.html', {'form': form})
 
 
 def sign_up_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            user_profile = form.save()
+            user = form.save()
 
             return redirect('signin')
     else:
         form = SignUpForm()
 
-    return render(request, 'signup.html', {'form': form})
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return render(request, 'templates/signup.html', {'form': form})
 
 
 
@@ -75,17 +63,15 @@ def sign_up_view(request):
 # class UserProfileCreateView(CreateAPIView):
 #     queryset = UserProfile.objects.all()
 #     serializer_class = UserProfileSerializer
-
-
+    
 # # signin views
-
-
 # class SignInView(APIView):
 #     def post(self, request):
 #         serializer = SignInSerializer(data=request.data)
 #         if serializer.is_valid():
 #             email_or_phone = serializer.validated_data['email_or_phone']
 #             password = serializer.validated_data['password']
+
 #             try:
 #                 user_profile = UserProfile.objects.get(email=email_or_phone) 
 #                 if user_profile.password == password:
