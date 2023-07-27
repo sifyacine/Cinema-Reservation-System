@@ -78,7 +78,6 @@ DATABASES = {
         'ENGINE': 'djongo',
         'NAME': 'user_db',
         "CLIENT": {
-            'host': 'mongodb+srv://admin:admin@mycluster.dtselnt.mongodb.net/',
             'username': 'admin',
             'password': 'admin',
         }
