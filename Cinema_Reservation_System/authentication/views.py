@@ -1,5 +1,3 @@
-# authentication/views.py
-
 from django.shortcuts import render, redirect
 from .forms import SignUpForm, SignInForm
 from django.contrib.auth import authenticate, login
@@ -21,7 +19,7 @@ def sign_in_view(request):
     else:
         form = SignInForm()
 
-    return render(request, 'templates/signin.html', {'form': form})
+    return render(request, 'signin.html', {'form': form})
 
 
 def sign_up_view(request):
@@ -34,7 +32,7 @@ def sign_up_view(request):
     else:
         form = SignUpForm()
 
-    return render(request, 'templates/signup.html', {'form': form})
+    return render(request, 'signup.html', {'form': form})
 
 
 
