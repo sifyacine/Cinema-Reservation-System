@@ -8,16 +8,13 @@ def sign_in_view(request):
         if form.is_valid():
             email_or_phone = form.cleaned_data['email_or_phone']
             password = form.cleaned_data['password']
-
-            # Check if the user exists in the database and verify the credentials
             user = authenticate(request, username=email_or_phone, password=password)
 
             if user is not None:
-                # User exists and credentials are valid, log in the user
                 login(request, user)
-                return redirect('dashboard')  # Replace 'dashboard' with your desired redirect URL
+                return redirect('signup') 
             else:
-                # User doesn't exist or credentials are invalid, show an error message
+
                 form.add_error(None, 'Invalid email/phone or password.')
 
     else:
