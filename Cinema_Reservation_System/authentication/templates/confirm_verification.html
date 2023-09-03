@@ -1,0 +1,16 @@
+<!-- confirm_code.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Confirm Verification Code</title>
+</head>
+<body>
+    <h1>Confirm Verification Code</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <label for="verification_code">Verification Code:</label>
+        <input type="text" name="verification_code" id="verification_code" required>
+        <button type="submit">Verify</button>
+    </form>
+</body>
+</html>

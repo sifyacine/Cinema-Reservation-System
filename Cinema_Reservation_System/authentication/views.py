@@ -1,13 +1,9 @@
-from django.shortcuts import render, redirect
-from .forms import SignUpForm, SignInForm
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
-import uuid
+from django.shortcuts import render, redirect
 from .models import UserProfile
-from django.core.mail import send_mail
-
-
-
+from .forms import SignUpForm, SignInForm
+from twilio.rest import Client
+import pyotp
 
 def sign_in_view(request):
     if request.method == 'POST':
@@ -19,126 +15,88 @@ def sign_in_view(request):
 
             if user is not None:
                 login(request, user)
-                return redirect('signup') 
+                return redirect('signup')
             else:
                 form.add_error(None, 'Invalid email/phone or password.')
-
     else:
         form = SignInForm()
 
     return render(request, 'signin.html', {'form': form})
 
+# Function to generate a verification code
+def generate_verification_code():
+    totp = pyotp.TOTP(pyotp.random_base32(), interval=60)
+    verification_code = totp.now()
+    return verification_code
+
+# Function to send the verification code via SMS
+def send_verification_code(phone_number, verification_code):
+    # Use your Twilio account SID and auth token here
+    account_sid = 'AC7894b22d75be7b2e0c08f24ee0fa42d0'
+    auth_token = '9fb77427bd08448a4e0b94a00dcf8389'
+    client = Client(account_sid, auth_token)
+
+    message = client.messages.create(
+        from_='+15736373763',
+        body=f'Your verification code is: {verification_code}',
+        to=phone_number
+    )
+
+    print(message.sid)
 
 def sign_up_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            # Save the user object after setting the password
-            user = form.save(commit=False)
-            user.set_password(form.cleaned_data['password'])
+            # Create a user profile
+            user_profile = UserProfile.objects.create(
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name'],
+                email=form.cleaned_data['email'],
+                phone_number=form.cleaned_data['phone_number'],
+                password=form.cleaned_data['password'],  # Hash the password in production
+                phone_verified=False,
+                email_verified=False,
+            )
 
-            # Generate a verification token
-            verification_token = str(uuid.uuid4())
-            user.email_verification_token = verification_token
+            # Generate and send verification code
+            verification_code = generate_verification_code()
+            send_verification_code(user_profile.phone_number, verification_code)
 
-            user.save()
+            # Store verification code and phone number in session
+            request.session['verification_code'] = verification_code
+            request.session['phone_number'] = user_profile.phone_number
 
-            # Send the verification email
-            subject = 'Email Verification'
-            message = f'Click the link below to verify your email:\n\n' \
-                      f'http://127.0.0.1:8000/verify_email/{verification_token}/'
-            from_email = 'ycn585@gmail.com'  # Change this to your sending email address
-            to_email = user.email
-            send_mail(subject, message, from_email, [to_email])
-
-            return redirect('verification_code_entry')  # Redirect to the verification code entry page
-
+            return redirect('confirm_verification')
     else:
         form = SignUpForm()
 
     return render(request, 'signup.html', {'form': form})
 
-def email_verification_pending(request):
-    return render(request, 'email_verification_pending.html')
-
-def verify_email(request, verification_token):
-    try:
-        user = UserProfile.objects.get(email_verification_token=verification_token)
-        if user.email_verified:
-            return render(request, 'email_verified.html')
-        else:
-            return redirect('verification_code_entry')
-    except UserProfile.DoesNotExist:
-        return render(request, 'email_verification_invalid.html')
-
-def email_verification_view(request):
+def confirm_verification_code(request):
     if request.method == 'POST':
         verification_code = request.POST.get('verification_code')
-        try:
-            user = UserProfile.objects.get(email_verification_token=verification_code)
-            user.email_verified = True
-            user.email_verification_token = None
-            user.save()
-            return render(request, 'email_verified.html')
-        except UserProfile.DoesNotExist:
-            return render(request, 'email_verification_invalid.html')
+        stored_code = request.session.get('verification_code')
 
-    return render(request, 'email_verification_entry.html')
+        if verification_code == stored_code:
+            # Get phone number from session
+            phone_number = request.session.get('phone_number')
 
+            try:
+                # Query user profile by phone number
+                user_profile = UserProfile.objects.get(phone_number=phone_number)
+            except UserProfile.DoesNotExist:
+                return render(request, 'phone_verification_invalid.html')
 
+            # Verify phone number
+            user_profile.phone_verified = True
+            user_profile.save()
 
+            # Log the user in
+            user = authenticate(request, username=user_profile.email, password=user_profile.password)
 
+            if user is not None:
+                login(request, user)
+                return redirect('profile')  # Redirect to the user's profile page
 
-
-
-
-
-
-
-
-
-
-
-
-
-# from rest_framework.generics import CreateAPIView
-# from .models import UserProfile
-# from .serializers import UserProfileSerializer, SignInSerializer
-# from rest_framework.response import Response
-# from rest_framework.views import APIView
-# from rest_framework import status
-
-# # signup views 
-# class UserProfileCreateView(CreateAPIView):
-#     queryset = UserProfile.objects.all()
-#     serializer_class = UserProfileSerializer
-    
-# # signin views
-# class SignInView(APIView):
-#     def post(self, request):
-#         serializer = SignInSerializer(data=request.data)
-#         if serializer.is_valid():
-#             email_or_phone = serializer.validated_data['email_or_phone']
-#             password = serializer.validated_data['password']
-
-#             try:
-#                 user_profile = UserProfile.objects.get(email=email_or_phone) 
-#                 if user_profile.password == password:
-#                     return Response({"message": "Access accepted."})
-#                 else:
-#                     return Response({"message": "Wrong password."})
-
-#             except UserProfile.DoesNotExist:
-#                 try:
-#                     user_profile = UserProfile.objects.get(phone_number=email_or_phone)
-#                     if user_profile.password == password:
-#                         return Response({"message": "Access accepted."})
-#                     else:
-#                         return Response({"message": "Wrong password."})
-                
-#                 except UserProfile.DoesNotExist:
-#                     return Response({"message": "Wrong email or phone number."}, status=status.HTTP_401_UNAUTHORIZED)
-
-#         else:
-
-#            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return render(request, 'confirm_verification.html')
