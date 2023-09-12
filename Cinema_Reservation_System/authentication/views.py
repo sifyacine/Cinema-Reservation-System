@@ -1,27 +1,64 @@
+from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
 from .models import UserProfile
-from .forms import SignUpForm, SignInForm
 from twilio.rest import Client
 import pyotp
+from .forms import SignInForm, SignUpForm  # Import your custom SignInForm
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+
+
+
 
 def sign_in_view(request):
     if request.method == 'POST':
         form = SignInForm(request.POST)
         if form.is_valid():
-            email_or_phone = form.cleaned_data['email_or_phone']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=email_or_phone, password=password)
-
-            if user is not None:
-                login(request, user)
-                return redirect('signup')
+            identifier = form.cleaned_data['identifier']
+            password_written = form.cleaned_data['password']
+            
+            # Check if identifier is a phone number or an email
+            if '@' in identifier:
+                # Sign in with email
+                try:
+                    user_profile = UserProfile.objects.get(email=identifier)
+                except UserProfile.DoesNotExist:
+                    error_message = 'Invalid email or password'
+                    return render(request, 'signin.html', {'form': form, 'error_message': error_message})
             else:
-                form.add_error(None, 'Invalid email/phone or password.')
+                # Sign in with phone number
+                try:
+                    user_profile = UserProfile.objects.get(phone_number=identifier)
+                except UserProfile.DoesNotExist:
+                    error_message = 'Invalid phone number or password'
+                    return render(request, 'signin.html', {'form': form, 'error_message': error_message})
+
+                user = authenticate(request, username=user_profile.phone_number, password=password_written)
+                if user:
+                    login(request, user)
+                    return redirect('signin')
+                else:
+                    error_message = 'Incorrect password'
+                    return render(request, 'signin.html', {'form': form, 'error_message': error_message})
+            
+            user = authenticate(request, username=user_profile.email, password=password_written)
+            if user:
+                login(request, user)
+                return redirect('home')
+            else:
+                error_message = 'Incorrect password'
+                return render(request, 'signin.html', {'form': form, 'error_message': error_message})
     else:
         form = SignInForm()
-
+    
     return render(request, 'signin.html', {'form': form})
+
 
 # Function to generate a verification code
 def generate_verification_code():
@@ -97,6 +134,73 @@ def confirm_verification_code(request):
 
             if user is not None:
                 login(request, user)
-                return redirect('profile')  # Redirect to the user's profile page
+                return redirect('signin')  # Redirect to the user's profile page
 
     return render(request, 'confirm_verification.html')
+
+
+
+User = get_user_model()
+
+def forgot_password(request):
+    if request.method == 'POST':
+        email_written = request.POST['email']
+        try:
+            user = UserProfile.objects.get(email=email_written)
+            reset_password_link = f'http://127.0.0.1:8000/registering/reset-password/{email_written}/'
+
+            # Send an email with the reset password link
+            subject = 'Password Reset Request'
+            message = f'Please click the following link to reset your password:\n{reset_password_link}'
+            from_email = 'ycn585@email.com'  # Replace with your email address
+            recipient_list = [user.email]
+
+            send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+
+            return render(request, 'password_reset_email_sent.html')
+        except UserProfile.DoesNotExist:
+            return render(request, 'email_not_found.html')
+    else:
+        return render(request, 'forgot_password_email.html')
+
+
+
+
+def reset_password(request, email):
+    try:
+        user = UserProfile.objects.get(email=email)
+
+        if request.method == 'POST':
+            new_password = request.POST['new_password']
+
+            # Update the user's password
+            user.password = new_password
+            user.save()
+
+            return render(request, 'password_reset_success.html')
+        else:
+            return render(request, 'forgot_password_renew.html', {'email': email})
+    except UserProfile.DoesNotExist:
+        # Handle the case where the email doesn't exist
+        return render(request, 'email_not_found.html')
+
+
+
+
+
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Important: Update the session to avoid automatic logout
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Your password has been successfully changed.')
+            return redirect('change_password')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'change_password.html', {'form': form})
+
+

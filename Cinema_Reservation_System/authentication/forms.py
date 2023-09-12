@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth import authenticate
 from .models import UserProfile
 
 class SignUpForm(forms.ModelForm):
@@ -12,5 +13,9 @@ class SignUpForm(forms.ModelForm):
 from django import forms
 
 class SignInForm(forms.Form):
-    email_or_phone = forms.CharField(label='Email or Phone', max_length=100)
-    password = forms.CharField(label='Password', widget=forms.PasswordInput)
+    identifier = forms.CharField(label='Phone Number or Email')
+    password = forms.CharField(widget=forms.PasswordInput)
+
+
+class ForgotPasswordForm(forms.Form):
+    email = forms.EmailField(label="Email")
