@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'movie_listings',
     'userprofile',
+    'cinema_houses',
     
 ]
 

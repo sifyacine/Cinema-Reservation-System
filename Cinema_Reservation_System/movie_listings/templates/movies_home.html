@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 20px;
+        }
+
+        form {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 60%;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        div {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            border-radius: 5px;
+        }
+
+        h2 {
+            flex: 1;
+            font-size: 20px;
+            color: #333;
+            margin: 0;
+        }
+
+        img {
+            max-width: 100px;
+            height: auto;
+            margin-left: 20px;
+        }
+
+        p {
+            text-align: center;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Movie Search</h1>
+    
+    <!-- Search Form -->
+    <form method="get" action="/movies/">
+        <input type="text" name="q" placeholder="Search for a movie">
+        <button type="submit">Search</button>
+    </form>
+    
+    <!-- Display Movies -->
+    <div>
+        <ul>
+            {% for movie in movies_data.d %}
+                {% if movie.id != "/awards-central" and movie.id != "/comic-con" %}
+                <li>
+                    <h2><a href="{% url 'movie_details' movie.id %}">{{ movie.l }}</a></h2> <!-- Movie Title with link to details page -->
+                    {% if movie.i %}
+                        <img src="{{ movie.i.imageUrl }}" alt="{{ movie.l }}"> <!-- Movie Poster -->
+                    {% endif %}
+                </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

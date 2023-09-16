@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cinema Houses</title>
+</head>
+<body>
+    <h1>Cinema Houses</h1>
+
+    <ul>
+        {% for cinema_house in cinema_houses %}
+            <li>
+                <h2>{{ cinema_house.name }}</h2>
+                <p>Location: {{ cinema_house.location }}</p>
+                <p>Rating: {{ cinema_house.rating }}</p>
+                <!-- Add more cinema house details as needed -->
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

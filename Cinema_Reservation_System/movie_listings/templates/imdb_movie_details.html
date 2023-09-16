@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IMDb Movie Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        h2 {
+            font-size: 28px;
+            color: #333;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        img {
+            display: block;
+            margin: 0 auto;
+            max-width: 80%;
+            height: auto;
+            margin-top: 20px;
+        }
+
+        p {
+            font-size: 18px;
+            color: #333;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 12px 24px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            display: block;
+            margin: 20px auto;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        /* Container for movie details */
+        .movie-details {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Styling for individual movie data elements */
+        .movie-detail {
+            margin: 10px 0;
+        }
+
+        /* Add more specific styles as needed */
+    </style>
+</head>
+<body>
+    <h1>Movie Details</h1>
+
+    <div class="movie-details">
+        {% if movie_data %}
+
+            <p>{{ movie_data.plotOutline.text }}</p>
+            <div class="movie-detail">Duration: {{ movie_data.runtimeMins }} mins</div>
+            <div class="movie-detail">Genres: {{ movie_data.genres }}</div>
+            <div class="movie-detail">Release Date: {{ movie_data.releaseDate }}</div>
+            <div class="movie-detail">Rating: {{ movie_data.ratings.rating }}</div>
+            <div class="movie-detail">Reviews: {{ movie_data.ratings.ratingCount }}</div>
+
+            <!-- Purchase Ticket Button -->
+            <form method="post" >
+                {% csrf_token %}
+                <button type="submit">Purchase Ticket</button>
+            </form>
+        {% else %}
+            <p>No movie data available.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
