@@ -1,8 +1,8 @@
 from django.shortcuts import render
-from .models import CinemaHouse
+from .models import Cinema
 
 def cinema_house_list(request):
-    cinema_houses = CinemaHouse.objects.all()
+    cinema_houses = Cinema.objects.all()
     context = {
         'cinema_houses': cinema_houses
     }

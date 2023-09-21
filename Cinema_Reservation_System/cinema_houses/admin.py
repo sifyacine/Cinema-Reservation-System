@@ -1,21 +1,16 @@
+# cinema/admin.py
+
 from django.contrib import admin
-from cinema_houses.models import Showtime, CinemaHouse
+from .models import Cinema, Showtime
 
+class ShowtimeInline(admin.TabularInline):
+    model = Showtime
+    extra = 1
 
-class CinemaHouseAdmin(admin.ModelAdmin):
-    list_display = ('name', 'location', 'rating')
-    list_filter = ('location', 'rating')
-    search_fields = ('name', 'location')
+class CinemaAdmin(admin.ModelAdmin):
+    list_display = ('name', 'address', 'email_contact', 'rating', 'phone_number')
+    search_fields = ('name', 'address')
+    list_filter = ('rating',)
+    inlines = [ShowtimeInline]  # Add the ShowtimeInline to the CinemaAdmin only
 
-
-class ShowtimeAdmin(admin.ModelAdmin):
-    list_display = ('movie_title', 'display_cinema_houses', 'date', 'time', 'is_available')
-    list_filter = ('date', 'is_available')
-
-    def display_cinema_houses(self, obj):
-        return ', '.join([cinema.name for cinema in obj.cinema_houses.all()])
-
-    display_cinema_houses.short_description = 'Cinema Houses'
-
-admin.site.register(CinemaHouse)
-admin.site.register(Showtime, ShowtimeAdmin)
+admin.site.register(Cinema, CinemaAdmin)

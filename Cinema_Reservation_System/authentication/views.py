@@ -30,14 +30,14 @@ def sign_in_view(request):
                     user_profile = UserProfile.objects.get(email=identifier)
                 except UserProfile.DoesNotExist:
                     error_message = 'Invalid email or password'
-                    return render(request, 'signin.html', {'form': form, 'error_message': error_message})
+                    return render(request, 'authentication/signin.html', {'form': form, 'error_message': error_message})
             else:
                 # Sign in with phone number
                 try:
                     user_profile = UserProfile.objects.get(phone_number=identifier)
                 except UserProfile.DoesNotExist:
                     error_message = 'Invalid phone number or password'
-                    return render(request, 'signin.html', {'form': form, 'error_message': error_message})
+                    return render(request, 'authentication/signin.html', {'form': form, 'error_message': error_message})
 
                 user = authenticate(request, username=user_profile.phone_number, password=password_written)
                 if user:
@@ -45,7 +45,7 @@ def sign_in_view(request):
                     return redirect('signin')
                 else:
                     error_message = 'Incorrect password'
-                    return render(request, 'signin.html', {'form': form, 'error_message': error_message})
+                    return render(request, 'authentication/signin.html', {'form': form, 'error_message': error_message})
             
             user = authenticate(request, username=user_profile.email, password=password_written)
             if user:
@@ -53,11 +53,11 @@ def sign_in_view(request):
                 return redirect('home')
             else:
                 error_message = 'Incorrect password'
-                return render(request, 'signin.html', {'form': form, 'error_message': error_message})
+                return render(request, 'authentication/signin.html', {'form': form, 'error_message': error_message})
     else:
         form = SignInForm()
     
-    return render(request, 'signin.html', {'form': form})
+    return render(request, 'authentication/signin.html', {'form': form})
 
 
 # Function to generate a verification code
@@ -108,7 +108,7 @@ def sign_up_view(request):
     else:
         form = SignUpForm()
 
-    return render(request, 'signup.html', {'form': form})
+    return render(request, 'authentication/signup.html', {'form': form})
 
 def confirm_verification_code(request):
     if request.method == 'POST':
@@ -123,7 +123,7 @@ def confirm_verification_code(request):
                 # Query user profile by phone number
                 user_profile = UserProfile.objects.get(phone_number=phone_number)
             except UserProfile.DoesNotExist:
-                return render(request, 'phone_verification_invalid.html')
+                return render(request, 'phone_verification/phone_verification_invalid.html')
 
             # Verify phone number
             user_profile.phone_verified = True
@@ -136,7 +136,7 @@ def confirm_verification_code(request):
                 login(request, user)
                 return redirect('signin')  # Redirect to the user's profile page
 
-    return render(request, 'confirm_verification.html')
+    return render(request, 'phone_verification/confirm_verification.html')
 
 
 
@@ -157,11 +157,11 @@ def forgot_password(request):
 
             send_mail(subject, message, from_email, recipient_list, fail_silently=False)
 
-            return render(request, 'password_reset_email_sent.html')
+            return render(request, 'forget_passsword/forgot_password_email.html')
         except UserProfile.DoesNotExist:
-            return render(request, 'email_not_found.html')
+            return render(request, 'forget_password/email_not_found.html')
     else:
-        return render(request, 'forgot_password_email.html')
+        return render(request, 'forget_password/forgot_password_email.html')
 
 
 
@@ -177,12 +177,12 @@ def reset_password(request, email):
             user.password = new_password
             user.save()
 
-            return render(request, 'password_reset_success.html')
+            return render(request, 'forget_password/password_reset_success.html')
         else:
-            return render(request, 'forgot_password_renew.html', {'email': email})
+            return render(request, 'forget_password/forgot_password_renew.html', {'email': email})
     except UserProfile.DoesNotExist:
         # Handle the case where the email doesn't exist
-        return render(request, 'email_not_found.html')
+        return render(request, 'forget_password/email_not_found.html')
 
 
 
@@ -202,5 +202,40 @@ def change_password(request):
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'change_password.html', {'form': form})
+
+
+# views.py
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import UserProfile
+
+# @login_required  # Make sure the user is logged in to access this view
+def user_profile(request):
+    user = UserProfile.email
+    try:
+        profile = UserProfile.objects.get(user=user)
+    except UserProfile.DoesNotExist:
+        # Handle the case where the user profile doesn't exist
+        profile = None
+
+    if request.method == 'POST':
+        # Handle form submission and update user profile
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+        email = request.POST['email']
+        phone_number = request.POST['phone_number']
+
+        if profile is not None:
+            # Update the user's profile if it exists
+            profile.first_name = first_name
+            profile.last_name = last_name
+            profile.email = email
+            profile.phone_number = phone_number
+            profile.save()
+
+    return render(request, 'user_profile.html', {'profile': profile})
+
+
 
 
