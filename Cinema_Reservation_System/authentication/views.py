@@ -12,9 +12,11 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+import bcrypt
 
 
 
+from django.contrib import auth
 
 def sign_in_view(request):
     if request.method == 'POST':
@@ -22,7 +24,7 @@ def sign_in_view(request):
         if form.is_valid():
             identifier = form.cleaned_data['identifier']
             password_written = form.cleaned_data['password']
-            
+
             # Check if identifier is a phone number or an email
             if '@' in identifier:
                 # Sign in with email
@@ -39,25 +41,22 @@ def sign_in_view(request):
                     error_message = 'Invalid phone number or password'
                     return render(request, 'authentication/signin.html', {'form': form, 'error_message': error_message})
 
-                user = authenticate(request, username=user_profile.phone_number, password=password_written)
-                if user:
-                    login(request, user)
-                    return redirect('signin')
-                else:
-                    error_message = 'Incorrect password'
-                    return render(request, 'authentication/signin.html', {'form': form, 'error_message': error_message})
-            
-            user = authenticate(request, username=user_profile.email, password=password_written)
-            if user:
-                login(request, user)
+            # Use your custom authentication function
+            is_authenticated = UserProfile(user_profile, password_written)
+
+            if is_authenticated:
+                # Log in the user manually (since we're not using Django's default authentication)
+                request.session['user_id'] = user_profile.id  # Store user's ID in the session
                 return redirect('home')
             else:
-                error_message = 'Incorrect password'
+                error_message = 'Authentication failed'
                 return render(request, 'authentication/signin.html', {'form': form, 'error_message': error_message})
     else:
         form = SignInForm()
     
     return render(request, 'authentication/signin.html', {'form': form})
+
+
 
 
 # Function to generate a verification code
@@ -81,17 +80,23 @@ def send_verification_code(phone_number, verification_code):
 
     print(message.sid)
 
+
+
 def sign_up_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
+            # Hash the password
+            password = form.cleaned_data['password']
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
             # Create a user profile
             user_profile = UserProfile.objects.create(
                 first_name=form.cleaned_data['first_name'],
                 last_name=form.cleaned_data['last_name'],
                 email=form.cleaned_data['email'],
                 phone_number=form.cleaned_data['phone_number'],
-                password=form.cleaned_data['password'],  # Hash the password in production
+                password=hashed_password.decode('utf-8'),  # Store the hashed password
                 phone_verified=False,
                 email_verified=False,
             )
@@ -104,7 +109,7 @@ def sign_up_view(request):
             request.session['verification_code'] = verification_code
             request.session['phone_number'] = user_profile.phone_number
 
-            return redirect('confirm_verification')
+            return redirect('phone_verification/confirm_verification')
     else:
         form = SignUpForm()
 
@@ -204,17 +209,12 @@ def change_password(request):
     return render(request, 'change_password.html', {'form': form})
 
 
-# views.py
 
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .models import UserProfile
-
-# @login_required  # Make sure the user is logged in to access this view
+@login_required  # Make sure the user is logged in to access this view
 def user_profile(request):
     user = UserProfile.email
     try:
-        profile = UserProfile.objects.get(user=user)
+        profile = UserProfile.objects.get(email= user)
     except UserProfile.DoesNotExist:
         # Handle the case where the user profile doesn't exist
         profile = None
@@ -234,7 +234,7 @@ def user_profile(request):
             profile.phone_number = phone_number
             profile.save()
 
-    return render(request, 'user_profile.html', {'profile': profile})
+    return render(request, 'profile/user_profile.html', {'profile': profile})
 
 
 
